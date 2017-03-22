@@ -1,0 +1,69 @@
+﻿  Player.cpp
+c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): error C2011: 'Player': 'class' type redefinition
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(2): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(2): error C2059: syntax error: ')'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(3): error C2143: syntax error: missing ';' before '{'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(3): error C2447: '{': missing function header (old-style formal list?)
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(17): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(17): error C2059: syntax error: ')'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(17): error C2143: syntax error: missing ';' before '{'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(17): error C2447: '{': missing function header (old-style formal list?)
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(18): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(19): error C2270: 'draw': modifiers not allowed on nonmember functions
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(20): error C3861: 'getTransform': identifier not found
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(21): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(23): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(25): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(25): error C2228: left of '.getPosition' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(25): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(27): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(30): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(30): error C2228: left of '.setRotation' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(30): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(32): error C2065: 'anim_clock': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(32): error C2228: left of '.getElapsedTime' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(32): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(34): error C2065: 'status': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(34): error C2065: 'STOJ': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(35): error C2065: 'frame': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(36): error C2065: 'frame': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(38): error C2065: 'frame': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): error C2228: left of '.setTextureRect' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): error C2065: 'frame': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'sf::IntRect'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(40): note: No constructor could take the source type, or constructor overload resolution was ambiguous
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(42): error C2065: 'anim_clock': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(42): error C2228: left of '.restart' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(42): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(45): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(47): error C2065: 'status': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(47): error C2065: 'STOJ': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(48): error C2065: 'frame': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(50): error C2027: use of undefined type 'Player'
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.h(6): note: see declaration of 'Player'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(52): error C2065: 'status': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(52): error C2065: 'IDZ': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(53): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(53): error C2228: left of '.getRotation' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(53): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(54): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(55): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(56): error C2065: 'sprite': undeclared identifier
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(56): error C2228: left of '.move' must have class/struct/union
+  c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(56): note: type is 'unknown-type'
+c:\users\mikołaj\desktop\projekt\game\game\game\player.cpp(56): error C2065: 'speed': undeclared identifier
+  Generating Code...
+  Compiling...
+  Engine.cpp
+  Generating Code...
+  Skipping... (no relevant changes detected)
+  main.cpp
+  Game.cpp
