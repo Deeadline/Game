@@ -1,15 +1,14 @@
 ﻿#include "Game.h"
 #include <fstream>
 
-RenderWindow window;
-Texture Set(Texture t)
+Texture Set(Texture t,RenderWindow &window)
 {
 	if (window.getSize().x == 800) t.loadFromFile("Data/Graphic/1.png");
 	else if (window.getSize().x == 1024) t.loadFromFile("Data/Graphic/2.png");
 	else if (window.getSize().x == 1600) t.loadFromFile("Data/Graphic/3.png");
 	return t;
 }
-void setResolution(Vector2u x)
+void setResolution(Vector2u x,RenderWindow &window)
 {
 	fstream plik;
 	plik.open("Data/config.cfg", ios::out | ios::trunc);
@@ -17,7 +16,7 @@ void setResolution(Vector2u x)
 	plik << (int)x.x << ',' << (int)x.y ;
 	plik.close();
 }
-void checkConfig()
+void checkConfig(RenderWindow &window,View &view)
 {
 	fstream plik;
 	plik.open("Data/config.cfg", ios::in|ios::out);
@@ -29,21 +28,20 @@ void checkConfig()
 	string data;
 	getline(plik, data);
 	size_t pos = data.find(',');
-	int x = atoi(data.substr(0, pos).c_str());
+	float x = atoi(data.substr(0, pos).c_str());
 	data.erase(0, pos + 1);
-	int y = atoi(data.c_str());
+	float y = atoi(data.c_str());
 	plik.close();
 	window.create(VideoMode(x, y), "Robocza nazwa gry", Style::Close);
+	view.setSize(x, y);
+	view.setCenter(x / 2, y / 2);
 }
 Game::Game()
-{
-	ContextSettings set;
-	set.antialiasingLevel = 8;
-	checkConfig();
-	tex1 = Set(tex1);
-	tlo.setTexture(tex1);
+{	
+	checkConfig(window, view);
+	backgroundTexture = Set(backgroundTexture, window);
+	background.setTexture(backgroundTexture);
 	state = END;
-	window.setFramerateLimit(100);
 	if (!font.loadFromFile("Data/Roboto.ttf"))
 	{
 		MessageBox(NULL, "Font not found!", "ERROR", NULL); return;
@@ -91,7 +89,7 @@ void Game::menu()
 		text[i].setCharacterSize(30);
 		text[i].setString(str[i]);
 		cout << text[i].getGlobalBounds().width << " ";
-		text[i].setPosition(50, (250 + i * 50));
+		text[i].setPosition(50.0, (250.0 + i * 50.0));
 	}
 	while (state == MENU) 
 	{
@@ -130,7 +128,7 @@ void Game::menu()
 			else text[i].setFillColor(Color::Yellow);
 		}
 		window.clear();
-		window.draw(tlo);
+		window.draw(background);
 		window.draw(title);
 		for (int i = 0;i < count;i++)
 			window.draw(text[i]);
@@ -154,7 +152,7 @@ void Game::options()
 		text[i].setFont(font);
 		text[i].setCharacterSize(30);
 		text[i].setString(str[i]);
-		text[i].setPosition(500 - (text[i].getGlobalBounds().width / 2), (250 + i * 50));
+		text[i].setPosition(500.0 - (text[i].getGlobalBounds().width / 2.0), (250.0 + i * 50.0));
 	}
 	while (state==OPTIONS)
 	{
@@ -170,19 +168,19 @@ void Game::options()
 				&& event.key.code == Mouse::Left)
 			{
 				Vector2u res(800, 600);
-				setResolution(res);
+				setResolution(res, window);
 			}
 			else if (text[2].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
 				Vector2u res(1024, 768);
-				setResolution(res);
+				setResolution(res, window);
 			}
 			else if (text[3].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
 				Vector2u res(1600,900);
-				setResolution(res);
+				setResolution(res, window);
 			}
 		}
 		text[0].setFillColor(Color::Yellow);
@@ -192,7 +190,7 @@ void Game::options()
 			else text[i].setFillColor(Color::Yellow);
 		}
 		window.clear();
-		window.draw(tlo);
+		window.draw(background);
 		window.draw(title);
 		for (int i = 0; i < count;i++)
 			window.draw(text[i]);
@@ -201,7 +199,8 @@ void Game::options()
 }
 void Game::game()
 {
-	Engine engine(window);
+	Engine engine(window,view);
+	engine.runEngine();
 	state = MGAME;
 }
 void Game::load()
@@ -221,7 +220,6 @@ void Game::load()
 			}
 		}
 		window.clear();
-		window.draw(tlo);
 		window.draw(title);
 		window.display();
 	}
@@ -259,7 +257,7 @@ void Game::menuGame()
 		text[i].setFont(font);
 		text[i].setCharacterSize(30);
 		text[i].setString(str[i]);
-		text[i].setPosition(100 - (text[i].getGlobalBounds().width / 2.5), (250 + i * 50));
+		text[i].setPosition(100.0 - (text[i].getGlobalBounds().width / 2.5), (250.0 + i * 50.0));
 	}
 	while (state == MGAME)
 	{
@@ -293,7 +291,7 @@ void Game::menuGame()
 			else text[i].setFillColor(Color::Yellow);
 		}
 		window.clear();
-		window.draw(tlo);
+		window.draw(background);
 		window.draw(title);
 		for (int i = 0;i < count;i++)
 			window.draw(text[i]);

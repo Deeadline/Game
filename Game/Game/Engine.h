@@ -1,11 +1,26 @@
 #pragma once
-#include "Player.h"
+#ifndef ENGINE_H
+#define ENGINE_H
+#include "Game.h"
+#include "Level.h"
+using namespace sf;
 class Engine
 {
 public:
-	Engine(RenderWindow &win);
+	Engine(RenderWindow &win,View &view);
 	~Engine();
-	void runEngine(RenderWindow &win);
+	void runEngine();
 private:
-	Player player;
+	void updateMap();
+	void update(float);
+	void draw();
+	Texture texture[Level::COUNT];
+	Level level;
+	vector<vector<Sprite>> sprite;
+	int WIDTH, HEIGHT;
+	void setMap(string);
+	Vector2f player;
+	RenderWindow *window;
+	View *view;
 };
+#endif
