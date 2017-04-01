@@ -24,7 +24,9 @@ Engine::Engine(RenderWindow &win,View &vi)
 		sprite[y].resize(WIDTH, standard);
 	}
 
-	player = Vector2f(16 * TILE_SIZE, 16 * TILE_SIZE);
+	tPlayer.loadFromFile("Data/Graphic/postacie/symbol1.png");
+	player.setPosition(16 * TILE_SIZE, 16 * TILE_SIZE);
+	player.setTexture(tPlayer);
 
 	// ustawienie przyk³adowej mapy
 	setMap("example_level.txt");
@@ -56,25 +58,22 @@ void Engine::runEngine()
 					menu = true;
 
 				}
-				if (event.key.code == Keyboard::Left)
+				if (event.key.code == Keyboard::A)
 				{
-					player.x -= TILE_SIZE;
-					viewGame->move(-TILE_SIZE, 0);
+					if(player.x() >= window->getPosition().x) 
+					movePlayer(-TILE_SIZE, 0);
 				}
-				else if (event.key.code == Keyboard::Right)
+				else if (event.key.code == Keyboard::D)
 				{
-					player.x += TILE_SIZE;
-					viewGame->move(TILE_SIZE, 0);
+					movePlayer(TILE_SIZE, 0);
 				}
-				else if (event.key.code == Keyboard::Up)
+				else if (event.key.code == Keyboard::W)
 				{
-					player.y -= TILE_SIZE;
-					viewGame->move(0, -TILE_SIZE);
+					movePlayer(0, -TILE_SIZE);
 				}
-				else if (event.key.code == Keyboard::Down)
+				else if (event.key.code == Keyboard::S)
 				{
-					player.y += TILE_SIZE;
-					viewGame->move(0, TILE_SIZE);
+					movePlayer(0, TILE_SIZE);
 				}
 				updateMap();
 				window->setView(*viewGame);
@@ -83,11 +82,29 @@ void Engine::runEngine()
 
 		float delta = time.getElapsedTime().asSeconds() - lastUpdate.asSeconds();
 		update(delta);
+		player.update(delta);
 
 		lastUpdate = time.getElapsedTime();
 		draw();
 	}
 }
+
+void Engine::movePlayer(int x, int y)
+{
+	bool canMove = true;
+	Vector2i nextPos(x + player.realX(), y + player.realY());
+	nextPos.x /= TILE_SIZE;
+	nextPos.y /= TILE_SIZE;
+	
+	if (nextPos.x < 0 || nextPos.x >= level.getHeight() || nextPos.y < 0 || nextPos.y >= level.getHeight())
+		canMove = false;
+	if (canMove)
+	{
+		player.move(x, y);
+		viewGame->move(x, y);
+	}
+}
+
 void Engine::update(float delta)
 {
 	//wypisyanie delty
@@ -102,7 +119,7 @@ void Engine::draw()
 			window->draw(sprite[y][x]);
 		}
 	}
-
+	player.draw(*window);
 	window->display();
 }
 void Engine::setMap(string name)
@@ -118,7 +135,8 @@ void Engine::setMap(string name)
 }
 void Engine::updateMap()
 {
-	Vector2i fixed(player.x / TILE_SIZE, player.y / TILE_SIZE);
+	Vector2i fixed(player.x() / TILE_SIZE, player.y() / TILE_SIZE);
+	cout << "Fixed: " << fixed.x << " / " << fixed.y << endl;
 	viewGame->setCenter(fixed.x*TILE_SIZE + TILE_SIZE / 2, fixed.y*TILE_SIZE + TILE_SIZE / 2);
 
 	// wyliczamy pozycjê minimalnych granic kamery

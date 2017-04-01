@@ -3,6 +3,7 @@
 #define ENGINE_H
 #include "Game.h"
 #include "Level.h"
+#include "Player.h"
 using namespace sf;
 class Engine
 {
@@ -13,14 +14,17 @@ public:
 private:
 	void updateMap();
 	void update(float);
+	void movePlayer(int, int);
 	void draw();
 	Texture texture[Level::COUNT];
 	Level level;
 	vector<vector<Sprite>> sprite;
 	int WIDTH, HEIGHT;
 	short TILE_SIZE = 64;
+	short TILE_SIZE1 = 32;
 	void setMap(string);
-	Vector2f player;
+	Texture tPlayer;
+	Player player;
 	RenderWindow *window;
 	View *viewGame;
 };
