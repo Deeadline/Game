@@ -3,81 +3,89 @@
 Engine::Engine(RenderWindow &win,View &vi)
 {
 	window = &win;
-	view = &vi;
-	//wczytanie odpowiednich obrazkï¿½w do tablicy texture
-	for (int y = 0, i = 0;y < 2;y++) {
-		for (int x = 0; x < 5; x++) {
-			texture[i].loadFromFile("Data/tileset.png", IntRect(Vector2i(32 * x, 32 * y), Vector2i(32, 32)));
+	viewGame = &vi;
+	// wczytanie kafli do pamiêci
+	for (int y = 0, i = 0; y < 2; y++) {
+		for (int x = 0; x < 5; x++)
+		{
+			texture[i].loadFromFile("data/tileset64.png", IntRect(Vector2i(TILE_SIZE*x, TILE_SIZE*y), Vector2i(TILE_SIZE, TILE_SIZE)));
 			i++;
 		}
 	}
-	// ustalenie wysokoï¿½ci i szerokoï¿½ci tablicy sprite'ï¿½w
-	WIDTH = window->getSize().x / 32 + 2;
-	HEIGHT = window->getSize().y / 32 + 2;
-	cout << "WIDTH:" << WIDTH << " HEIGHT:" << HEIGHT << endl;
-	//powiï¿½kszenie owej tablicy do WIDTH i HEIGHT
+
+	// ustawienie wielkoœci tablicy sprite'ów
+	WIDTH = window->getSize().x / TILE_SIZE + 2;
+	HEIGHT = window->getSize().y / TILE_SIZE + 2;
+
 	Sprite standard(texture[0]);
+
 	sprite.resize(HEIGHT);
 	for (int y = 0; y < HEIGHT; y++) {
 		sprite[y].resize(WIDTH, standard);
 	}
-	// ustawienie gracza na danej pozycji
-	player = Vector2f(16 * 32, 16 * 32);
-	// wczytanie mapy
-	setMap("Level.level");
+
+	player = Vector2f(16 * TILE_SIZE, 16 * TILE_SIZE);
+
+	// ustawienie przyk³adowej mapy
+	setMap("example_level.txt");
 }
 Engine::~Engine() {}
 void Engine::runEngine()
 {
-	Time lastUpdate = Time::Zero;
-	Clock time;
 	bool menu = false;
-	window->clear();
-	window->display();
-	while (!menu)
+	// ostatnie rysowanie klatki
+	Time lastUpdate = Time::Zero;
+	// do mierzenia czasu pomiêdzy klatkami
+	Clock time;
+
+	while (menu == false)
 	{
 		Event event;
 		Vector2f mouse(Mouse::getPosition(*window));
+
+		window->setView(*viewGame);
+
 		while (window->pollEvent(event))
 		{
-			if (event.type == Event::KeyReleased) {
-				if (event.key.code == Keyboard::Escape){
+			if (event.type == Event::Closed)
+				window->close();
+
+			if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::Escape) {
 					menu = true;
-					FloatRect x(0, 0, 1024, 768);
-					view->reset(x);
 
 				}
-				if (event.key.code == Keyboard::D)
+				if (event.key.code == Keyboard::Left)
 				{
-					player.x += 32;
-					view->move(32, 0);
+					player.x -= TILE_SIZE;
+					viewGame->move(-TILE_SIZE, 0);
 				}
-				if (event.key.code == Keyboard::W)
+				else if (event.key.code == Keyboard::Right)
 				{
-					player.y -= 32;
-					view->move(0, -32);
+					player.x += TILE_SIZE;
+					viewGame->move(TILE_SIZE, 0);
 				}
-				if (event.key.code == Keyboard::A)
+				else if (event.key.code == Keyboard::Up)
 				{
-					player.x -= 32;
-					view->move(-32,0);
+					player.y -= TILE_SIZE;
+					viewGame->move(0, -TILE_SIZE);
 				}
-				if (event.key.code == Keyboard::S)
+				else if (event.key.code == Keyboard::Down)
 				{
-					player.y += 32;
-					view->move(0, 32);
+					player.y += TILE_SIZE;
+					viewGame->move(0, TILE_SIZE);
 				}
 				updateMap();
-				window->setView(*view);
+				window->setView(*viewGame);
 			}
 		}
+
 		float delta = time.getElapsedTime().asSeconds() - lastUpdate.asSeconds();
 		update(delta);
+
 		lastUpdate = time.getElapsedTime();
-		//draw();
-		window->clear();
-		window->draw(sprite[0][0]);
-		window->display();
+		draw();
 	}
 }
 void Engine::update(float delta)
@@ -87,98 +95,117 @@ void Engine::update(float delta)
 }
 void Engine::draw()
 {
-	//rysowanie mapy
 	window->clear();
+
 	for (int y = 0; y < HEIGHT; y++) {
 		for (int x = 0; x < WIDTH; x++) {
 			window->draw(sprite[y][x]);
 		}
 	}
+
 	window->display();
 }
 void Engine::setMap(string name)
 {
-	//wczytanie poziomu
+	// wczytanie mapy i ustawienie wskaŸnika
 	if (!level.loadFromFile(name)) {
-		cout << "Nie wczytano poziomu" << endl;
+		cout << "[ERROR] Problem z zaladowaniem poziomu do pamieci!n";
 		return;
 	}
-	//ustawienie mapy i view.
+
 	updateMap();
-	window->setView(*view);
+	window->setView(*viewGame);
 }
 void Engine::updateMap()
 {
-	//ustawienie widoku mapy
-	Vector2i fixed((int)player.x / 32, (int)player.y / 32);
-	view->setCenter(fixed.x * 32 + 32 / 2, fixed.y * 32 + 32 / 2);
-	Vector2f min = Vector2f(view->getCenter().x - view->getSize().x / 2, view->getCenter().y - view->getSize().y / 2);
+	Vector2i fixed(player.x / TILE_SIZE, player.y / TILE_SIZE);
+	viewGame->setCenter(fixed.x*TILE_SIZE + TILE_SIZE / 2, fixed.y*TILE_SIZE + TILE_SIZE / 2);
 
-	float left = min.x / (float)32.0;
-	float right = left + WIDTH - 2;
+	// wyliczamy pozycjê minimalnych granic kamery
+	Vector2f min = Vector2f(viewGame->getCenter().x - viewGame->getSize().x / 2, viewGame->getCenter().y - viewGame->getSize().y / 2);
+
+	// ustawienie kamery w poziomie
+	int leftBorder = min.x / TILE_SIZE;
+	int rightBorder = leftBorder + WIDTH - 2;
+
+	// je¿eli jest za daleko na lewo
 	if (min.x < 0)
 	{
-		float diff = abs(min.x);
-		min.x += diff;
-		view->move(diff, 0);
-		left = min.x / (float)3.0;
-	}
-	else if (left > 0 && right - 1 < level.getW() - 1)
-	{
-		min.x -= 32;
-		view->move(-32, 0);
-		left = min.x / 32;
-	}
-	else if (right - 1 >= level.getW() - 1)
-	{
-		float diff = view->getCenter().x + view->getSize().x / 2 - (level.getW() - 1) * 32;
-		diff = -diff - 32;
-		min.x += diff;
-		left = min.x / 32;
-		view->setCenter((float)((left + (WIDTH) / 2) * 32 + 32), (float)(view->getCenter().y));
-	}
-	else if (left == 0)
-		view->move((float)(-32 / 2), (float)0);
-	float upBorder = min.y / 32;
-	float bottomBorder = upBorder + HEIGHT - 2;
+		int difference = abs(min.x);        // ró¿nica pomiêdzy 0, a lew¹ krawêdzi¹
+		min.x += difference;
+		viewGame->move(difference, 0);
 
-	if (min.y < 0) {
-		float diff = abs(min.y);
-		min.y += diff;
-		view->move(0, diff);
-
-		upBorder = min.y / 32;
+		leftBorder = min.x / TILE_SIZE;
 	}
-	else if (upBorder > 0 && bottomBorder - 1 < level.getH() - 1)
+	else if (leftBorder > 0 && rightBorder - 1 < level.getWidth() - 1)
 	{
-		min.y -= 32;
-		view->move(0, -32);
+		min.x -= TILE_SIZE;
+		viewGame->move(-TILE_SIZE, 0);
 
-		upBorder = min.y / 32;
+		leftBorder = min.x / TILE_SIZE;
 	}
-	else if (bottomBorder - 1 >= level.getH() - 1)
-	{
-		int difference = view->getCenter().y + view->getSize().y / 2 - (level.getH() - 1) * 32;
 
-		difference = -difference - 32;
+	else if (rightBorder - 1 >= level.getWidth() - 1)
+	{
+		// MAGIC!
+		int difference = viewGame->getCenter().x + viewGame->getSize().x / 2 - (level.getWidth() - 1)*TILE_SIZE;
+
+		difference = -difference - TILE_SIZE;
+		min.x += difference;
+
+		leftBorder = (min.x) / TILE_SIZE;
+
+		viewGame->setCenter((leftBorder + (WIDTH) / 2)*TILE_SIZE + TILE_SIZE, viewGame->getCenter().y);
+	}
+	else if (leftBorder == 0)
+		viewGame->move(-TILE_SIZE / 2, 0);
+
+
+
+	// ustawienie kamery w pionie
+	int upBorder = min.y / TILE_SIZE;
+	int bottomBorder = upBorder + HEIGHT - 2;
+
+	// analogicznie: je¿eli jest za bardzo wysuniêta do góry
+	if (min.y < 0)
+	{
+		int difference = abs(min.y);
+		min.y += difference;
+		viewGame->move(0, difference);
+
+		upBorder = min.y / TILE_SIZE;
+
+	}
+	else if (upBorder > 0 && bottomBorder - 1 < level.getHeight() - 1)
+	{
+		min.y -= TILE_SIZE;
+		viewGame->move(0, -TILE_SIZE);
+
+		upBorder = min.y / TILE_SIZE;
+	}
+	else if (bottomBorder - 1 >= level.getHeight() - 1)
+	{
+		int difference = viewGame->getCenter().y + viewGame->getSize().y / 2 - (level.getHeight() - 1)*TILE_SIZE;
+
+		difference = -difference - TILE_SIZE;
 		min.y += difference;
 
-		upBorder = (min.y) / 32;
+		upBorder = (min.y) / TILE_SIZE;
 
-		view->setCenter(view->getCenter().x, (upBorder + (HEIGHT) / 2) * 32 + 32);
+		viewGame->setCenter(viewGame->getCenter().x, (upBorder + (HEIGHT) / 2)*TILE_SIZE + TILE_SIZE);
 
-		if (bottomBorder - 1 == level.getH() - 1)
-			view->move(0, -32 / 2);
+		if (bottomBorder - 1 == level.getHeight() - 1)           // !!!
+			viewGame->move(0, -TILE_SIZE / 2);
 	}
 	else if (upBorder == 0)
-		view->move(0, -32 / 2);
+		viewGame->move(0, -TILE_SIZE / 2);
 
 
 	// ustawienie kafli na scenie
 	for (int y = 0, h = upBorder; y < HEIGHT; y++) {          // h - horizontal
-		for (int x = 0, v = left; x < WIDTH; x++)       // v - vertical
+		for (int x = 0, v = leftBorder; x < WIDTH; x++)       // v - vertical
 		{
-			sprite[y][x].setPosition(v * 32, h * 32);
+			sprite[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
 			sprite[y][x].setTexture(texture[level.map[h][v].type]);
 
 			v++;

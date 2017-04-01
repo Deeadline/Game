@@ -22,18 +22,22 @@ protected:
 private:
 	Font font;
 	RenderWindow window;
-	View view;
+	View viewMenu,viewGame;
 	Texture backgroundTexture;
 	Sprite background;
+
 	void menu(); // g³ówne menu
 	void menuGame(); // menu z poziomu gry
 	void options(); //opcje ogólnie
 	void load(); // wczytanie gry z pliku
 	void save(); // zapis gry do pliku
+
 	void game(); // g³ówne okno gry
-	friend void checkConfig(RenderWindow &,View &); // sprawdzenie cfg z pliku
-	friend void setResolution(Vector2u,RenderWindow &); // zmiana rozdzielczoœci
-	friend void setSound(); // ON-OFF dzwiek
-	friend Texture Set(Texture t,RenderWindow &);//ustawienie t³a
+
+	void checkConfig(); // sprawdzenie cfg z pliku
+	void setResolution(Vector2u); // zmiana rozdzielczoœci
+	void setSound(); // ON-OFF dzwiek
+
+	Texture Set(Texture t);//ustawienie t³a
 };
 #endif

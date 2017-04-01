@@ -18,9 +18,10 @@ private:
 	Level level;
 	vector<vector<Sprite>> sprite;
 	int WIDTH, HEIGHT;
+	short TILE_SIZE = 64;
 	void setMap(string);
 	Vector2f player;
 	RenderWindow *window;
-	View *view;
+	View *viewGame;
 };
 #endif

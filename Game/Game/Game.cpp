@@ -1,51 +1,65 @@
 ﻿#include "Game.h"
 #include <fstream>
-
-Texture Set(Texture t,RenderWindow &window)
+void Game::setSound() {}
+Texture Game::Set(Texture t)
 {
+	//ustawienie odpowiedniego tla
 	if (window.getSize().x == 800) t.loadFromFile("Data/Graphic/1.png");
 	else if (window.getSize().x == 1024) t.loadFromFile("Data/Graphic/2.png");
 	else if (window.getSize().x == 1600) t.loadFromFile("Data/Graphic/3.png");
 	return t;
 }
-void setResolution(Vector2u x,RenderWindow &window)
+void Game::setResolution(Vector2u x)
 {
+	//zmiana rozdzielczosci i zapisanie nowej do pliku
 	fstream plik;
 	plik.open("Data/config.cfg", ios::out | ios::trunc);
 	window.create(VideoMode(x.x, x.y), "Robocza nazwa gry", Style::Close);
-	plik << (int)x.x << ',' << (int)x.y ;
+	plik << (int)x.x << ',' << (int)x.y;
 	plik.close();
 }
-void checkConfig(RenderWindow &window,View &view)
+void Game::checkConfig()
 {
+	//pobieranie zapisanej konfiguracji z pliku
 	fstream plik;
-	plik.open("Data/config.cfg", ios::in|ios::out);
+	plik.open("Data/config.cfg", ios::in | ios::out);
 	if (!plik.is_open())
 	{
-		MessageBox(NULL, "Config not found!", "ERROR", NULL); 
+		MessageBox(NULL, "Config not found!", "ERROR", NULL);
 		return;
 	}
+
+	cout << "Wczytano config" << endl;
+
+	//pobieranie rozdzielczosci
 	string data;
 	getline(plik, data);
 	size_t pos = data.find(',');
 	float x = atoi(data.substr(0, pos).c_str());
 	data.erase(0, pos + 1);
 	float y = atoi(data.c_str());
+
 	plik.close();
+
+	//tworzenie okna i ustalanie rozdzielczosci
 	window.create(VideoMode(x, y), "Robocza nazwa gry", Style::Close);
-	view.setSize(x, y);
-	view.setCenter(x / 2, y / 2);
+
+	viewMenu.setSize(x, y);
+	viewMenu.setCenter(x / 2, y / 2);
+
+	viewGame.setSize(x, y);
+	viewGame.setCenter(x / 2, y / 2);
 }
 Game::Game()
 {	
-	checkConfig(window, view);
-	backgroundTexture = Set(backgroundTexture, window);
-	background.setTexture(backgroundTexture);
 	state = END;
+	checkConfig();
 	if (!font.loadFromFile("Data/Roboto.ttf"))
 	{
 		MessageBox(NULL, "Font not found!", "ERROR", NULL); return;
 	}
+	backgroundTexture = Set(backgroundTexture);
+	background.setTexture(backgroundTexture);
 	state = MENU;
 }
 Game::~Game() {}
@@ -91,13 +105,13 @@ void Game::menu()
 		cout << text[i].getGlobalBounds().width << " ";
 		text[i].setPosition(50.0, (250.0 + i * 50.0));
 	}
-	while (state == MENU) 
+	while (state == MENU)
 	{
 		Vector2f mouse(Mouse::getPosition(window));
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::Closed || event.type == Event::KeyPressed
+			if (event.type == Event::Closed || event.type == Event::KeyReleased
 				&& event.key.code == Keyboard::Escape) {
 				state = END;
 			}
@@ -123,11 +137,13 @@ void Game::menu()
 			}
 		}
 		for (int i = 0;i < count;i++) {
-			if(text[i].getGlobalBounds().contains(mouse))
+			if (text[i].getGlobalBounds().contains(mouse))
 				text[i].setFillColor(Color::Green);
 			else text[i].setFillColor(Color::Yellow);
 		}
+
 		window.clear();
+		window.setView(viewMenu);
 		window.draw(background);
 		window.draw(title);
 		for (int i = 0;i < count;i++)
@@ -154,13 +170,13 @@ void Game::options()
 		text[i].setString(str[i]);
 		text[i].setPosition(500.0 - (text[i].getGlobalBounds().width / 2.0), (250.0 + i * 50.0));
 	}
-	while (state==OPTIONS)
+	while (state == OPTIONS)
 	{
 		Vector2f mouse(Mouse::getPosition(window));
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::KeyPressed && event.key.code == Keyboard::Escape)
+			if (event.type == Event::KeyReleased && event.key.code == Keyboard::Escape)
 			{
 				state = MENU;
 			}
@@ -168,19 +184,19 @@ void Game::options()
 				&& event.key.code == Mouse::Left)
 			{
 				Vector2u res(800, 600);
-				setResolution(res, window);
+				setResolution(res);
 			}
 			else if (text[2].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
 				Vector2u res(1024, 768);
-				setResolution(res, window);
+				setResolution(res);
 			}
 			else if (text[3].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
-				Vector2u res(1600,900);
-				setResolution(res, window);
+				Vector2u res(1600, 900);
+				setResolution(res);
 			}
 		}
 		text[0].setFillColor(Color::Yellow);
@@ -190,6 +206,7 @@ void Game::options()
 			else text[i].setFillColor(Color::Yellow);
 		}
 		window.clear();
+		window.setView(viewMenu);
 		window.draw(background);
 		window.draw(title);
 		for (int i = 0; i < count;i++)
@@ -199,7 +216,7 @@ void Game::options()
 }
 void Game::game()
 {
-	Engine engine(window,view);
+	Engine engine(window,viewGame);
 	engine.runEngine();
 	state = MGAME;
 }
@@ -214,12 +231,14 @@ void Game::load()
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::KeyPressed && event.key.code == Keyboard::Escape)
+			if (event.type == Event::KeyReleased && event.key.code == Keyboard::Escape)
 			{
 				state = MENU;
 			}
 		}
 		window.clear();
+		window.setView(viewMenu);
+		window.draw(background);
 		window.draw(title);
 		window.display();
 	}
@@ -235,11 +254,13 @@ void Game::save()
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::KeyPressed && event.key.code == Keyboard::Escape) {
+			if (event.type == Event::KeyReleased && event.key.code == Keyboard::Escape) {
 				state = MGAME;
 			}
 		}
 		window.clear();
+		window.setView(viewMenu);
+		window.draw(background);
 		window.draw(title);
 		window.display();
 	}
@@ -265,7 +286,7 @@ void Game::menuGame()
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::KeyPressed && event.key.code == Keyboard::Escape)
+			if (event.type == Event::KeyReleased && event.key.code == Keyboard::Escape)
 			{
 				state = GAME;
 			}
@@ -291,6 +312,7 @@ void Game::menuGame()
 			else text[i].setFillColor(Color::Yellow);
 		}
 		window.clear();
+		window.setView(viewMenu);
 		window.draw(background);
 		window.draw(title);
 		for (int i = 0;i < count;i++)
