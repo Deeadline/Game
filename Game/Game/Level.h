@@ -1,22 +1,29 @@
 #pragma once
 #include <string>
 #include <vector>
-
+#include <random>
+#include <ctime>
+#include <functional>
 using namespace std;
 
 class Level
 {
 public:
-	Level();
-	~Level();
+	Level(); // destruktor
+	~Level(); // konstruktor
 
-	bool loadFromFile(string);
+	bool loadFromFile(string); // wczytywanie poziomow
+
+	//gettery rozmiaru poziomu
+	unsigned short getWidth() { return width; }
+	unsigned short getHeight() { return height; }
+
 
 	// typy kafli
 	enum TileType {
 		GRASS_1, GRASS_2, GRASS_3, GRASS_4, GRASS_5,
-		SAND_1, SAND_2, SAND_3, STONE_1, STONE_2, BUSH, COUNT
-	};
+		SAND_1, SAND_2, STONE_1, STONE_2, BUSH, COUNT
+	}; // typ kafelkow w grze
 
 	// struktura pomocnicza
 	struct Tile {
@@ -25,6 +32,8 @@ public:
 
 		bool collideable;           // info o tym czym wywo³uje kolizjê
 		bool interactable;          // info o tym czy gracz mo¿e wejœæ z tym obiektem w interakcjê
+
+		float chance; // szansa na przeciwnika
 	};
 
 	// tablica przechowuj¹ca informacje o kaflach
@@ -34,13 +43,9 @@ public:
 	unsigned short startX;
 	unsigned short startY;
 
-	unsigned short getWidth() { return width; }
-	unsigned short getHeight() { return height; }
-
-
 private:
 	unsigned short width;           // szerokosæ poziomu w kaflach (max 
 	unsigned short height;          // wysokoœæ poziomu w kaflach
 
-	Tile getTile(short);
+	Tile getTile(short); // funkcja pomocnicza zwraca typ kafelka
 };

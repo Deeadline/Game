@@ -14,9 +14,19 @@ void Game::setResolution(Vector2u x)
 	//zmiana rozdzielczosci i zapisanie nowej do pliku
 	fstream plik;
 	plik.open("Data/config.cfg", ios::out | ios::trunc);
-	window.create(VideoMode(x.x, x.y), "Robocza nazwa gry", Style::Close);
-	plik << (int)x.x << ',' << (int)x.y;
+	plik << (int)x.x << " " << (int)x.y;
 	plik.close();
+
+	window.create(VideoMode(x.x, x.y), "Robocza nazwa gry", Style::Close);
+	viewMenu.setSize(x.x, x.y);
+	viewMenu.setCenter(x.x / 2, x.y / 2);
+
+	viewGame.setSize(x.x, x.y);
+	viewGame.setCenter(x.x / 2, x.y / 2);
+
+	backgroundTexture = Set(backgroundTexture);
+	background.setTexture(backgroundTexture);
+
 }
 void Game::checkConfig()
 {
@@ -32,13 +42,8 @@ void Game::checkConfig()
 	cout << "Wczytano config" << endl;
 
 	//pobieranie rozdzielczosci
-	string data;
-	getline(plik, data);
-	size_t pos = data.find(',');
-	float x = atoi(data.substr(0, pos).c_str());
-	data.erase(0, pos + 1);
-	float y = atoi(data.c_str());
-
+	int x, y;
+	plik >> x >> y;
 	plik.close();
 
 	//tworzenie okna i ustalanie rozdzielczosci
@@ -49,6 +54,8 @@ void Game::checkConfig()
 
 	viewGame.setSize(x, y);
 	viewGame.setCenter(x / 2, y / 2);
+	backgroundTexture = Set(backgroundTexture);
+	background.setTexture(backgroundTexture);
 }
 Game::Game()
 {	
@@ -58,11 +65,12 @@ Game::Game()
 	{
 		MessageBox(NULL, "Font not found!", "ERROR", NULL); return;
 	}
-	backgroundTexture = Set(backgroundTexture);
-	background.setTexture(backgroundTexture);
 	state = MENU;
 }
-Game::~Game() {}
+Game::~Game()
+{
+	delete player;
+}
 void Game::runGame()
 {
 	while (state != END)
@@ -73,6 +81,9 @@ void Game::runGame()
 			break;
 		case GameState::GAME:
 			game();
+			break;
+		case GameState::CHSELECTION:
+			select();
 			break;
 		case GameState::OPTIONS:
 			options();
@@ -102,7 +113,6 @@ void Game::menu()
 		text[i].setFont(font);
 		text[i].setCharacterSize(30);
 		text[i].setString(str[i]);
-		cout << text[i].getGlobalBounds().width << " ";
 		text[i].setPosition(50.0, (250.0 + i * 50.0));
 	}
 	while (state == MENU)
@@ -118,7 +128,7 @@ void Game::menu()
 			else if (text[0].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
-				state = GAME;
+				state = CHSELECTION;
 			}
 			else if (text[1].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
@@ -195,7 +205,7 @@ void Game::options()
 			else if (text[3].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
-				Vector2u res(1600, 900);
+				Vector2u res(1600, 1200);
 				setResolution(res);
 			}
 		}
@@ -214,9 +224,68 @@ void Game::options()
 		window.display();
 	}
 }
+void Game::select()
+{
+	Text title("Wybór postaci", font, 80);
+	title.setStyle(Text::Bold);
+	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
+	const int size = 4;
+	Text text[size];
+	string str[] = { "Exit","Warrior","Mage","Ranger" };
+	text[0].setFont(font);
+	text[0].setCharacterSize(30);
+	text[0].setString(str[0]);
+	text[0].setPosition(100-(text[0].getGlobalBounds().width / 2), 700);
+	for (int i = 1;i < size;i++)
+	{
+		text[i].setFont(font);
+		text[i].setCharacterSize(30);
+		text[i].setString(str[i]);
+		text[i].setPosition(50+(i*250)-text[i].getGlobalBounds().width/2,200);
+	}
+	while (state == CHSELECTION)
+	{
+		Vector2f mouse(Mouse::getPosition(window));
+		Event event;
+		while (window.pollEvent(event))
+		{
+			if ((event.type == Event::KeyReleased && event.key.code == Keyboard::Escape )||(text[0].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left))
+				state = MENU;
+			else if (text[1].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left)
+			{
+				player = new Warrior();
+				state = GAME;
+			}
+			else if (text[2].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left)
+			{
+				player = new Mag();
+				state = GAME;
+			}
+			else if (text[3].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left)
+			{
+				player = new Ranger();
+				state = GAME;
+			}
+		}
+		for (int i = 0;i < size;i++)
+		{
+			if (text[i].getGlobalBounds().contains(mouse))
+				text[i].setFillColor(Color::Green);
+			else text[i].setFillColor(Color::Yellow);
+		}
+		window.clear();
+		window.setView(viewMenu);
+		window.draw(background);
+		window.draw(title);
+		for(int i=0;i<size;i++)
+			window.draw(text[i]);
+		window.display();
+
+	}
+}
 void Game::game()
 {
-	Engine engine(window,viewGame);
+	Engine engine(window,viewGame,font,*player);
 	engine.runEngine();
 	state = MGAME;
 }
