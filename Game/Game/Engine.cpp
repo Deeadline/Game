@@ -2,6 +2,9 @@
 
 #include <iostream>
 using namespace std;
+Engine::Engine()
+{
+}
 Engine::Engine(RenderWindow &win, View &vi,Font font,Player& player)
 {
 	window = &win;
@@ -18,16 +21,9 @@ Engine::Engine(RenderWindow &win, View &vi,Font font,Player& player)
 			i++;
 		}
 	}
-		texture22[0].loadFromFile("Data/Graphic/postacie/symbol1.png"); // trojkat
-		texture22[1].loadFromFile("Data/Graphic/postacie/symbol2.png"); // kwadrat
-		texture22[2].loadFromFile("Data/Graphic/postacie/symbol3.png"); // kolo
-		for(int i=0;i<3;i++)
-			texture22[i].createMaskFromColor(Color::White,1);
-		for (int i = 0;i < 3;i++)
-		{
-			texture2[i].loadFromImage(texture22[i]);
-			texture2[i].isSmooth();
-		}
+		texture2[0].loadFromFile("Data/Graphic/enemy/monk.png"); // trojkat
+		texture2[1].loadFromFile("Data/Graphic/enemy/minotaur.png"); // kwadrat
+		texture2[2].loadFromFile("Data/Graphic/enemy/redDragon.png"); // kolo
 	// ustawienie wielkoœci tablicy sprite'ów
 	WIDTH = window->getSize().x / TILE_SIZE + 2;
 	HEIGHT = window->getSize().y / TILE_SIZE + 2;
@@ -41,20 +37,25 @@ Engine::Engine(RenderWindow &win, View &vi,Font font,Player& player)
 	}
 
 	// ustawienie przykladowej mapy
-	setMap("example_level.txt");
+
+	setMap();
+
+	load_equipment();
 }
 Engine::~Engine()
 {
 
 }
-void Engine::runEngine()
+string Engine::runEngine()
 {
 	bool menu = false;
+	bool equipment = false;
+	bool fight = false;
 	// ostatnie rysowanie klatki
 	Time lastUpdate = Time::Zero;
 	// do mierzenia czasu pomiêdzy klatkami
 	float delta;
-	while (menu == false)
+	while (!menu && !equipment && !fight)
 	{
 		Event event;
 		Vector2f mouse(Mouse::getPosition(*window));
@@ -71,7 +72,15 @@ void Engine::runEngine()
 				if (event.key.code == Keyboard::Escape)
 				{
 					menu = true;
+					return "menu";
 					clock.restart();
+				}
+				else if (event.key.code == Keyboard::I)
+				{
+					equipment = true;
+					return "equipment";
+					clock.restart();
+
 				}
 			}
 			if (event.type == Event::KeyPressed) {
@@ -116,6 +125,17 @@ void Engine::runEngine()
 
 					movePlayer(0, TILE_SIZE);
 				}
+				if (flaga == 1) {
+					if (event.type == Event::KeyPressed && event.key.code == Keyboard::Y) {
+						fight = true;
+						return "fight";
+						clock.restart();		
+					}
+					if (event.type == Event::KeyPressed && event.key.code == Keyboard::N) {
+						flaga = false;
+						this->canMove = true;
+					}
+				}
 				pair<int, int> temp;
 				temp = updateMap();
 				updateMapNPC(temp);
@@ -130,46 +150,78 @@ void Engine::runEngine()
 	}
 }
 
+bool Engine::action(View& viewMenu)
+{
+	bool typ;
+	if (npc1->action(window, &viewMenu, font,player,&typ)) {
+		flaga = 0;
+		if (typ) {
+			pair<int, int> temp;
+			npc.NPCMap[position.y][position.x].exist = false;
+			npc.NPCMap[position.y][position.x].interactable = false;
+			temp = updateMap();
+			updateMapNPC(temp);
+
+			this->canMove = true;
+		}
+		return false;
+	}
+	return true;
+}
+
 void Engine::movePlayer(int x, int y)
 {
-	bool canMove = true;
 	Vector2i nextPos(x + player->realX(), y + player->realY());
 	nextPos.x /= TILE_SIZE;
 	nextPos.y /= TILE_SIZE;
-
-	if (nextPos.x < 0 || nextPos.x >= level.getHeight() || nextPos.y < 0 || nextPos.y >= level.getHeight())
-		canMove = false;
-	else if (level.map[nextPos.y][nextPos.x].collideable)
-		canMove = false;
+	if ((nextPos.x < 0 || nextPos.x >= level.getHeight() || nextPos.y < 0 || nextPos.y >= level.getHeight())) {
+		this->canMove = false;
+	}
+	else if (level.map[nextPos.y][nextPos.x].collideable) {
+		this->canMove = false;
+	}
 	else if (npc.NPCMap[nextPos.y][nextPos.x].interactable) {
+		position = nextPos;
+		flaga = true;
 		if (npc.check(nextPos) == 0)
 		{
 			npc1 = new Trader();
-			cout << "Stworzono Handlarza" << endl;
-
+			quest[0].setString("Trade?");
+			this->canMove = false;
 		}
 		else if (npc.check(nextPos) == 1)
 		{
 			npc1 = new Monster();
-			cout << "Stworzono przeciwnika " << endl;
+			quest[0].setString("Fight?");
+			this->canMove = false;
 		}
 		else if(npc.check(nextPos) == 2)
 		{
 			npc1 = new Boss();
-			cout << "Stworzono bossa" << endl;
+			quest[0].setString("Fight?");
+			this->canMove = false;
 		}
 	}
-	if (canMove)
+	else if (nextPos.x == level.endX && nextPos.y == level.endY) {
+		this->canMove = false;
+		this->player->setcurrentLevel(1);
+		setMap();
+	}
+	else if (!flaga)
 	{
+		canMove = true;
+	}
+		if (this->canMove)
+		{
 			player->move(x, y);
 			viewGame->move(x, y);
-	}
+		}
 }
 
 void Engine::update(float delta)
 {
 	//wypisyanie delty
-	cout << delta << endl;
+	//cout << delta << endl;
 }
 void Engine::draw()
 {
@@ -185,21 +237,50 @@ void Engine::draw()
 		}
 	}
 
-	player->draw(*window,move);
-	string str[] = { "Name","Str","Ag" };
-	for (int i = 0;i < 3;i++)
+	player->draw(*window, move);
+	string str[] = { "Class name ","Name ","Str ","Ag ", "Weapon ", "Armor " };
+	for (int i = 0;i < 6;i++)
 	{
 		text[i].setFont(font);
 		text[i].setCharacterSize(10);
-		text[i].setString(str[i]);
 		text[i].setPosition(viewGame->getCenter().x - (viewGame->getSize().x / 2.5), viewGame->getCenter().y - (viewGame->getSize().y / 2.5) + i * 15);
 	}
-	for (int i = 0;i<3;i++)
+	
+	text[0].setString(str[0] + player->getclassname());
+	text[1].setString(str[1] + player->getname());
+	text[2].setString(str[2] + to_string(player->getstr()));
+	text[3].setString(str[3] + to_string(player->getag()));
+	text[4].setString(str[4] + player->getcurrentweapon()->getName());
+	text[5].setString(str[5] + player->getcurrentarmor()->getName());
+	for (int i = 0;i<6;i++)
 		window->draw(text[i]);
-	window->display();
+
+	if (flaga) {
+		string st[] = { "Question","Yes","No" };
+		RectangleShape square;
+		square.setPosition(Vector2f(player->realX() + 150, player->realY()));
+		square.setFillColor(Color::Transparent);
+		quest[0].setFont(font);
+		quest[0].setCharacterSize(20);
+		quest[0].setPosition(square.getPosition().x,square.getPosition().y);
+		for (int i = 1;i < 3;i++)
+		{
+			quest[i].setFont(font);
+			quest[i].setCharacterSize(15);
+			quest[i].setString(st[i]);
+			quest[i].setPosition(square.getPosition().x, square.getPosition().y+i*30);
+		}
+		square.setSize(Vector2f(quest[0].getGlobalBounds().height+60,quest[0].getGlobalBounds().width));
+		window->draw(square);
+		for (int i = 0;i < 3;i++)
+			window->draw(quest[i]);
+	}
+
+		window->display();
 }
-void Engine::setMap(string name)
+void Engine::setMap()
 {
+	string name = "example_level" + to_string(this->player->getcurrentLevel()) + ".txt";
 	// wczytanie mapy i ustawienie wskaŸnika
 	if (!level.loadFromFile(name)) {
 		cout << "[ERROR] Problem z zaladowaniem poziomu do pamieci!n";
@@ -320,24 +401,37 @@ void Engine::updateMapNPC(pair<int,int> temp)
 {
 		for (int y = 0, h = temp.first;y < HEIGHT;y++) {
 			for (int x = 0, v = temp.second;x < WIDTH;x++) {
-				if (npc.NPCMap[h][v].type == NPC::MONSTER)
-				{
-					spriteNPC[y][x].setPosition(v*TILE_SIZE,h*TILE_SIZE);
-					spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
-				}
-				if (npc.NPCMap[h][v].type == NPC::TRADER)
-				{
-					spriteNPC[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
-					spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
-				}
-				if (npc.NPCMap[h][v].type == NPC::BOSS)
-				{
-					spriteNPC[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
-					spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
+				if (npc.NPCMap[h][v].exist = true) {
+					if (npc.NPCMap[h][v].type == NPC::MONSTER)
+					{
+						spriteNPC[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
+						spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
+					}
+					if (npc.NPCMap[h][v].type == NPC::TRADER)
+					{
+						spriteNPC[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
+						spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
+					}
+					if (npc.NPCMap[h][v].type == NPC::BOSS)
+					{
+						spriteNPC[y][x].setPosition(v*TILE_SIZE, h*TILE_SIZE);
+						spriteNPC[y][x].setTexture(texture2[npc.NPCMap[h][v].type]);
+					}
 				}
 				v++;
 			}
 			h++;
 			
 		}
+}
+void Engine::load_equipment() {
+	global_equipment.insert(Weapon("Sword", 1, 1));
+	global_equipment.insert(Weapon("Bow", 1, 1));
+	global_equipment.insert(Weapon("Staff", 1, 1));
+	global_equipment.insert(Weapon("Mace", 1, 1));
+	global_equipment.insert(Weapon("Axe", 1, 1));
+
+	global_equipment.insert(Armor("Plate armor", 1, 1));
+	global_equipment.insert(Armor("Leather armor", 1, 1));
+	global_equipment.insert(Armor("Robe", 1, 1));
 }

@@ -17,7 +17,8 @@ void Game::setResolution(Vector2u x)
 	plik << (int)x.x << " " << (int)x.y;
 	plik.close();
 
-	window.create(VideoMode(x.x, x.y), "Robocza nazwa gry", Style::Close);
+	window.setSize(x);
+
 	viewMenu.setSize(x.x, x.y);
 	viewMenu.setCenter(x.x / 2, x.y / 2);
 
@@ -26,6 +27,7 @@ void Game::setResolution(Vector2u x)
 
 	backgroundTexture = Set(backgroundTexture);
 	background.setTexture(backgroundTexture);
+
 
 }
 void Game::checkConfig()
@@ -47,7 +49,7 @@ void Game::checkConfig()
 	plik.close();
 
 	//tworzenie okna i ustalanie rozdzielczosci
-	window.create(VideoMode(x, y), "Robocza nazwa gry", Style::Close);
+	window.create(VideoMode(x, y), "Gra", Style::Close);
 
 	viewMenu.setSize(x, y);
 	viewMenu.setCenter(x / 2, y / 2);
@@ -61,7 +63,7 @@ Game::Game()
 {	
 	state = END;
 	checkConfig();
-	if (!font.loadFromFile("Data/Roboto.ttf"))
+	if (!font.loadFromFile("Data/roboto.ttf"))
 	{
 		MessageBox(NULL, "Font not found!", "ERROR", NULL); return;
 	}
@@ -69,7 +71,7 @@ Game::Game()
 }
 Game::~Game()
 {
-	delete player;
+
 }
 void Game::runGame()
 {
@@ -97,12 +99,18 @@ void Game::runGame()
 		case GameState::SAVE:
 			save();
 			break;
+		case GameState::EQUIPMENT:
+			equipment();
+			break;
+		case GameState::FIGHT:
+			fight();
+			break;
 		}
 	}
 }
 void Game::menu()
 {
-	Text title("Robocza nazwa gry", font, 80);
+	Text title("Gra", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getDefaultView().getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	const int count = 4;
@@ -163,17 +171,13 @@ void Game::menu()
 }
 void Game::options()
 {
-	Text title("Opcje gry", font, 80);
+	Text title("Options", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	const int count = 4;
 	Text text[count];
-	string str[] = { "Resolution","800x600","1024x768","1600x900" };
-	text[0].setFont(font);
-	text[0].setCharacterSize(30);
-	text[0].setString(str[0]);
-	text[0].setPosition(300 - (text[0].getGlobalBounds().width / 2), 300);
-	for (int i = 1;i < count; i++)
+	string str[] = { "Resolution:","800x600","1024x768","1600x900" };
+	for (int i = 0;i < count; i++)
 	{
 		text[i].setFont(font);
 		text[i].setCharacterSize(30);
@@ -205,7 +209,7 @@ void Game::options()
 			else if (text[3].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
-				Vector2u res(1600, 1200);
+				Vector2u res(1600, 900);
 				setResolution(res);
 			}
 		}
@@ -226,7 +230,7 @@ void Game::options()
 }
 void Game::select()
 {
-	Text title("Wybór postaci", font, 80);
+	Text title("Choose class", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	const int size = 4;
@@ -235,13 +239,13 @@ void Game::select()
 	text[0].setFont(font);
 	text[0].setCharacterSize(30);
 	text[0].setString(str[0]);
-	text[0].setPosition(100-(text[0].getGlobalBounds().width / 2), 700);
+	text[0].setPosition(100 - (text[0].getGlobalBounds().width / 2), 700);
 	for (int i = 1;i < size;i++)
 	{
 		text[i].setFont(font);
 		text[i].setCharacterSize(30);
 		text[i].setString(str[i]);
-		text[i].setPosition(50+(i*250)-text[i].getGlobalBounds().width/2,200);
+		text[i].setPosition(50 + (i * 250) - text[i].getGlobalBounds().width / 2, 200);
 	}
 	while (state == CHSELECTION)
 	{
@@ -249,7 +253,7 @@ void Game::select()
 		Event event;
 		while (window.pollEvent(event))
 		{
-			if ((event.type == Event::KeyReleased && event.key.code == Keyboard::Escape )||(text[0].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left))
+			if ((event.type == Event::KeyReleased && event.key.code == Keyboard::Escape) || (text[0].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left))
 				state = MENU;
 			else if (text[1].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased && event.key.code == Mouse::Left)
 			{
@@ -277,7 +281,7 @@ void Game::select()
 		window.setView(viewMenu);
 		window.draw(background);
 		window.draw(title);
-		for(int i=0;i<size;i++)
+		for (int i = 0;i<size;i++)
 			window.draw(text[i]);
 		window.display();
 
@@ -285,13 +289,21 @@ void Game::select()
 }
 void Game::game()
 {
-	Engine engine(window,viewGame,font,*player);
-	engine.runEngine();
-	state = MGAME;
+	if (!continue_game_flag) {
+		engine = new Engine(window, viewGame, font, *player);
+		continue_game_flag = true;
+	}
+	string flag = engine->runEngine();
+	if (flag == "menu")
+		state = MGAME;
+	else if (flag == "equipment")
+		state = EQUIPMENT;
+	else
+		state = FIGHT;
 }
 void Game::load()
 {
-	Text title("Wczytaj", font, 80);
+	Text title("Load Game", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	while (state == LOAD)
@@ -314,7 +326,7 @@ void Game::load()
 }
 void Game::save()
 {
-	Text title("Zapisz", font, 80);
+	Text title("Save game", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	while (state == SAVE)
@@ -336,7 +348,7 @@ void Game::save()
 }
 void Game::menuGame()
 {
-	Text title("Menu z gry", font, 80);
+	Text title("Menu in game", font, 80);
 	title.setStyle(Text::Bold);
 	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
 	const int count = 3;
@@ -372,8 +384,10 @@ void Game::menuGame()
 			else if (text[2].getGlobalBounds().contains(mouse) && event.type == Event::MouseButtonReleased
 				&& event.key.code == Mouse::Left)
 			{
+				continue_game_flag = false;
 				state = MENU;
 			}
+
 		}
 		for (int i = 0;i < count;i++) {
 			if (text[i].getGlobalBounds().contains(mouse))
@@ -387,5 +401,83 @@ void Game::menuGame()
 		for (int i = 0;i < count;i++)
 			window.draw(text[i]);
 		window.display();
+	}
+}
+void Game::equipment()
+{
+	Text title("Equipment", font, 80);
+	title.setStyle(Text::Bold);
+	title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 30);
+
+	const int count = 6;
+	string str[] = { "Class name ","Name ","Str ","Ag ", "Weapon ", "Armor " };
+	Text text[count];
+
+	text[0].setString(str[0] + player->getclassname());
+	text[1].setString(str[1] + player->getname());
+	text[2].setString(str[2] + to_string(player->getstr()));
+	text[3].setString(str[3] + to_string(player->getag()));
+	text[4].setString(str[4] + player->getcurrentweapon()->getName());
+	text[5].setString(str[5] + player->getcurrentarmor()->getName());
+
+	for (int i = 0;i < count;i++)
+	{
+		text[i].setFont(font);
+		text[i].setCharacterSize(15);
+		text[i].setPosition(window.getSize().x / 2 - text[i].getGlobalBounds().width / 2,
+			50 + title.getGlobalBounds().height + i * 15);
+	}
+
+	const int count_eq = player->getequipmentsize();
+	Text *texteq = new Text[count_eq];
+	int i = 0, j = 0;
+	for (Item const& item : player->getequipment())
+	{
+		texteq[i + j].setFont(font);
+		texteq[i + j].setCharacterSize(15);
+		texteq[i + j].setString(item.getName());
+		if (item.isweapon()) {
+			texteq[i + j].setPosition(viewMenu.getCenter().x - 200,
+				70 + count * 15 + title.getGlobalBounds().height + i * 15);
+			i++;
+		}
+		else if (item.isarmor()) {
+			texteq[i + j].setPosition(viewMenu.getCenter().x + 200,
+				70 + count * 15 + title.getGlobalBounds().height + j * 15);
+			j++;
+		}
+	}
+
+	while (state == EQUIPMENT)
+	{
+		Vector2f mouse(Mouse::getPosition(window));
+		Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && event.key.code == Keyboard::Escape)
+			{
+				state = GAME;
+			}
+			//jak wypisac ekwipunek z obsluga myszki
+		}
+		window.clear();
+		window.setView(viewMenu);
+		window.draw(background);
+		window.draw(title);
+		for (int i = 0;i<count;i++)
+			window.draw(text[i]);
+		for (int i = 0;i < count_eq;i++)
+			window.draw(texteq[i]);
+		window.display();
+	}
+	delete[] texteq;
+}
+
+void Game::fight()
+{
+	while (state == FIGHT) {
+		if (!engine->action(viewMenu)) {
+			state = GAME;
+		}
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <cstdlib>
 #include <vector>
 #include <random>
 #include <ctime>
@@ -42,6 +43,8 @@ public:
 	// pozycja startowa gracza (domyœlna na poziom)
 	unsigned short startX;
 	unsigned short startY;
+	unsigned short endX;
+	unsigned short endY;
 
 private:
 	unsigned short width;           // szerokosæ poziomu w kaflach (max 

@@ -9,6 +9,9 @@ Level::Level()
 
 	startX = 0;
 	startY = 0;
+
+	endX = 0;
+	endY = 0;
 }
 
 
@@ -44,7 +47,7 @@ Level::Tile Level::getTile(short code)
 
 	default:
 		tile.collideable = false;
-		tile.interactable = false;
+		tile.interactable = true;
 		tile.chance = 0.0;
 		break;
 	}
@@ -93,23 +96,27 @@ bool Level::loadFromFile(string level_name)
 
 		unsigned short x, y;
 		file >> x >> y;
-		cout << "Nazwa: " << name << " startx " << x << ", starty " << y << endl;
 		if (name == "[START]") {
 			// ustawienie interakcji
 			map[y][x].interaction = name;
 
 			// ustawienie jako standardowe wejœcie
 			if (startX == 0 && startY == 0) {
-				cout << "startx " << x << ", starty " << y << endl;
 				startX = x;
 				startY = y;
 			}
 
 		}
 
-		else {
+		else if(name == "[EXIT]"){
 			map[y][x].interaction = name;
+			endX = x;
+			endY = y;
+
+		}
+		else {
 			map[y][x].interactable = true;
+			map[y][x].interaction = name;
 		}
 	}
 
