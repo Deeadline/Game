@@ -16,6 +16,8 @@ public class MainCalculator{
         myCalc.setFirstNumber(4);
         myCalc.setSecondNumber(5);
         myCalc.getResult();
+        //static Java vs C++
+        //jezeli stworzymy konstruktor z arg. to musimy stworzyc bezarg. jezeli chcemy uzywac.
         // TODO code application logic here
     }
 }
